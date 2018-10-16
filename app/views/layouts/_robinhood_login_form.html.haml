@@ -7,6 +7,19 @@
       .form-group
         = label_tag "Password"
         = password_field_tag :password, nil, placeholder: "Password", class: "form-control", required: true
+      .form-group
+        = label_tag "expires_in"
+        = text_field_tag :expires_in, nil, placeholder: "86000", class: "form-control", required: false
+      .form-group
+        = label_tag "scope"
+        = text_field_tag :scope, nil, placeholder: "internal", class: "form-control", required: false
+      .form-group
+        = label_tag "grant_type"
+        = text_field_tag :grant_type, nil, placeholder: "password", class: "form-control", required: false
+      .form-group
+        = label_tag "client_id"
+        = text_field_tag :client_id, nil, placeholder: "c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS", class: "form-control", required: false
+
       - if params["mfa_required"]
         .form-group
           = label_tag "Security code"

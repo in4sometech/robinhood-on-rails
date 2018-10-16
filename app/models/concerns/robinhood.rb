@@ -5,17 +5,18 @@ module Robinhood
   ROBINHOOD_GREEN = "#21ce99"
   ROBINHOOD_ORANGE = "#fc4d2d"
 
-  def set_account_token username, password, security_code=nil
-    opts = {"username" => username, "password" => password}
+  def set_account_token username, password, security_code=nil, expires_in=86400, grant_type = password, scope = internal, client_id = c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS
+    opts = {"username" => username, "password" => password,"client_id" => client_id, "grant_type" => grant_type,"scope" => scope, "expires_in" => expires_in,  }
     opts["mfa_code"] = security_code if security_code.present?
-    response = robinhood_post "https://api.robinhood.com/api-token-auth/", opts
+    response = robinhood_post "https://api.robinhood.com/oauth2/token/", opts
     if !response["mfa_required"]
-      session[:robinhood_auth_token] = response["token"]
+      session[:robinhood_auth_token] = response["access_token"]
       get_user
       session[:robinhood_id] = @user["id"]
     end
     response
   end
+
 
   def get_positions
     @positions = get_all_results(robinhood_get "https://api.robinhood.com/positions/?nonzero=true")
@@ -156,7 +157,7 @@ module Robinhood
     now = Time.now.to_s
     @cards.sort!{|a,b| DateTime.parse(b["time"] || now) <=> DateTime.parse(a["time"] || now)}
   end
-  
+
   def dismiss_notification notification_url
     id = notification_url.split('/').last.to_s
     response = robinhood_post "https://api.robinhood.com/midlands/notifications/stack/#{id}/dismiss/", {}
@@ -181,7 +182,7 @@ module Robinhood
     columns = [ {role: :none, data: ['number', 'X']} ] # add x axis
 
     # each stock has a value and a tooltip
-    columns = columns + 
+    columns = columns +
       [
        {role: :none, data: ['number', "Portfolio"]},
        {role: :tooltip, data: {type: :string, role: :tooltip}}
@@ -194,7 +195,7 @@ module Robinhood
       date = h["begins_at"].in_time_zone("Eastern Time (US & Canada)").strftime '%m/%d/%y %l:%M%P'
       rows[i] = rows[i] + [price, "$#{price} on #{date}"]
     end
-    
+
     previous_close_price = @portfolio_history["adjusted_previous_close_equity"].to_f
     previous_close_price = @portfolio_history["equity_historicals"].first["adjusted_open_equity"].to_f if previous_close_price == 0.0
     most_recent_price = @portfolio_history["equity_historicals"].last["adjusted_open_equity"].to_f
@@ -217,7 +218,7 @@ module Robinhood
       series: {"0": {color: color}},
       backgroundColor: "#090d16"
     }
-    
+
     {columns: columns, rows: rows, options: options}
   end
 
@@ -226,7 +227,7 @@ module Robinhood
     columns = [ {role: :none, data: ['number', 'X']} ] # add x axis
 
     # each stock has a value and a tooltip
-    columns = columns + 
+    columns = columns +
       [
        {role: :none, data: ['number', symbol]},
        {role: :tooltip, data: {type: :string, role: :tooltip}}
@@ -259,7 +260,7 @@ module Robinhood
       series: {"0": {color: color}},
       backgroundColor: "#090d16"
     }
-    
+
     {columns: columns, rows: rows, options: options}
   end
 
@@ -352,7 +353,7 @@ module Robinhood
 
   def robinhood_headers
     headers = {"Accept" => 'application/json'}
-    headers["Authorization"] = "Token #{session[:robinhood_auth_token]}" if session[:robinhood_auth_token].present?
+    headers["Authorization"] = "Bearer #{session[:robinhood_auth_token]}" if session[:robinhood_auth_token].present?
     headers
   end
 end
