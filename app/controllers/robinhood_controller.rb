@@ -3,8 +3,7 @@ class RobinhoodController < ApplicationController
   include FinanceCalculator
 
   def login
-    response = set_account_token params[:username], params[:password], params[:security_code]
-
+    response = set_account_token params[:username], params[:password], params[:security_code], params[:expires_in], params[:grant_type], params[:scope], params[:client_id]
     flash[:info] = "Please provide the security code that was sent via text." if response["mfa_required"]
     flash[:warning] = response["non_field_errors"].join if response["non_field_errors"].present?
     redirect_to root_path(mfa_required: response["mfa_required"])
@@ -48,7 +47,7 @@ class RobinhoodController < ApplicationController
     end
     render layout: false
   end
-  
+
   def movers
     if params[:direction].present?
       @movers = get_sp500_movers(params[:direction])["results"]
@@ -213,7 +212,7 @@ class RobinhoodController < ApplicationController
             data["amount_sold"] += (price * quantity - o["fees"].to_f)
             current_shares_owned -= quantity
           end
-        else 
+        else
           # split
           current_shares_owned = (current_shares_owned / o["divisor"].to_f * o["multiplier"].to_f).to_i
         end
@@ -246,7 +245,7 @@ class RobinhoodController < ApplicationController
 
     @stock_lists = current_user.update_stock_list :portfolio, @instruments
     @stock_lists = @stock_lists.sort{|a,b| a.name.nil? ? 0 : 1}
-    
+
     render layout: false
   end
 
@@ -276,7 +275,7 @@ class RobinhoodController < ApplicationController
       list.instruments.clear
       list.update! instruments: instrument_order
     end
-    
+
     render nothing: true
   end
 
